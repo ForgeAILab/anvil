@@ -94,6 +94,7 @@ review → Validated`, plus side states `Blocked` and `Cut`.
 | Scaffold stack | `scaffold` |
 | Schedule | `parallel-execution`, `next-task` |
 | Execute | `implementation-brief`, `execute-task` |
+| Worker lens | `worker-guidelines` (always in force while implementing) |
 | Evaluate | `code-review`, `qa-verify` |
 | Sync | `sync-board` |
 | Watch | `risk-check` |

@@ -114,6 +114,7 @@ Claude Code skills live in `.claude/skills/`. The same operations on Codex shoul
 | Scaffold stack | `scaffold` |
 | Schedule | `parallel-execution`, `next-task` |
 | Execute | `implementation-brief`, `execute-task` |
+| Worker lens | `worker-guidelines` (always in force while implementing) |
 | Evaluate | `code-review`, `qa-verify` |
 | Sync | `sync-board` |
 | Watch | `risk-check` |

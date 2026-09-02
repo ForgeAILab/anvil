@@ -6,16 +6,18 @@ evaluator workflow (see `AGENTS.md`). This guide captures the conventions the
 existing skills already follow so new and edited skills stay consistent and
 trigger reliably.
 
-## Two kinds of skill
+## Three kinds of skill
 
 | Kind | Lives in | Purpose | Examples |
 | --- | --- | --- | --- |
 | **Pipeline skill** | `.claude/skills/<name>/SKILL.md` | A workflow stage (grill, spec, board, execute, review, sync). One per stage. | `mvp-grill`, `execute-task`, `code-review` |
 | **Pack skill** | `packs/<pack>/skills/<name>/SKILL.md` | Domain patterns that ship with a feature pack and are installed into a project alongside the pack's files. | `ai-feature-patterns`, `supabase-patterns`, `stripe-patterns` |
+| **Lens skill** | `.claude/skills/<name>/SKILL.md` | A behavioral guideline that is always in force *during* a stage rather than a stage itself. Thesis / rules / self-test per principle. | `worker-guidelines` |
 
-Both use the same frontmatter contract and the same body skeleton; they differ
-mainly in which body sections appear (pipeline skills are procedural; pack skills
-are pattern/checklist references).
+All three use the same frontmatter contract. Pipeline and pack skills share the
+body skeleton below and differ mainly in which sections appear (pipeline skills
+are procedural; pack skills are pattern/checklist references). A lens skill uses
+the lens shape instead — see *Lens skill shape*.
 
 ## Source of truth and the Codex mirror
 
@@ -143,6 +145,25 @@ After these, add skill-specific sections as needed. Two common patterns:
   a reference checklist for implementing/reviewing that capability, and usually
   end with a concrete `## Verification` block of observable checks.
 
+## Lens skill shape
+
+A lens skill (e.g. `worker-guidelines`) is a behavioral guideline, not a stage: it
+has no inputs, workflow, gate, or output template, and it never names the next
+skill. It follows the `andrej-karpathy-skills` shape so it stays short enough to
+hold in mind:
+
+- A one-paragraph opener saying what it shapes and which stage skill says *what*
+  to do.
+- An explicit **Tradeoff:** line (what the lens biases toward, and when to relax it).
+- Three to five numbered principles. Each is a bold one-line thesis, three to five
+  imperative bullets, and one `The test:` line the agent can ask itself.
+- A closing **These guidelines are working if:** line with observable outcomes.
+- About 400 words of body. Worked examples go in a separate file, never in the skill.
+
+The template `AGENTS.md` declares which lens is in force during which stage; the
+stage skill's description points at the lens and the lens's `Do NOT use` clause
+points back.
+
 ## Repo-specific conventions skills must respect
 
 These come from `AGENTS.md` and are assumed by every skill:
@@ -173,7 +194,7 @@ When adding or improving a skill, confirm:
 - [ ] `description` has the what / `Use when` / `Do NOT use → sibling` shape, with realistic trigger phrases.
 - [ ] Adjacent skills' `Do NOT use` clauses point back at this skill (mutual boundary).
 - [ ] `allowed-tools` is least-privilege for what the body actually does.
-- [ ] Body has `# Skill:` + `Goal` + `Recommended model` + `Inputs` + `Rules` + `Output format`, in that order.
+- [ ] Body has `# Skill:` + `Goal` + `Recommended model` + `Inputs` + `Rules` + `Output format`, in that order (pipeline and pack skills; a lens skill follows *Lens skill shape* instead).
 - [ ] `Inputs` lists the `docs/spark/` (and code) files and a stop condition for missing preconditions.
 - [ ] `Rules` encodes scope, gate, and separation-of-duties constraints relevant to this stage.
 - [ ] `Output format` is a paste-ready block and ends with a `Next` pointer (for pipeline skills).

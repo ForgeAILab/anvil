@@ -1,6 +1,6 @@
 ---
 name: execute-task
-description: Implement exactly one tasks.md task end-to-end, then report changes and a suggested inline status update. Use when the user says "do TASK-X", "execute the next task", "implement AUTH-001", or hands a task ID to the agent. Do NOT use without a task ID — ask which task, or run `/next-task` first.
+description: Implement exactly one tasks.md task end-to-end, then report changes and a suggested inline status update. Use when the user says "do TASK-X", "execute the next task", "implement AUTH-001", or hands a task ID to the agent. Do NOT use without a task ID — ask which task, or run `/next-task` first. Apply the `worker-guidelines` lens throughout.
 allowed-tools:
   - Read
   - Write
@@ -37,6 +37,9 @@ If the task ID is missing, already `[x]` / `Validated`, or not in status `Approv
 ## Rules
 
 - **Do exactly the task in the brief.** No bonus refactors, no "while I'm here" cleanups.
+- **Apply `/worker-guidelines` throughout** — surface assumptions before the first edit, the
+  minimum change that passes the scenario, surgical edits inside `Files likely to edit`, and
+  done only after the verification command has run.
 - If you discover work outside scope, write it down as a follow-up task in the report. Do not silently expand.
 - Stay inside `Files likely to edit` unless a real blocker forces otherwise — then explain why in the report.
 - After editing, run the verification command(s) from the brief. If they fail, fix and re-run. If you cannot fix, mark the task `Blocked: <reason>` annotated inline in the report.

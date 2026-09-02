@@ -57,6 +57,13 @@ rendered from `tasks.md` on demand.
 - Verification commands must actually run. A passing type-check is not a working feature.
 - When `git status` and a self-report disagree, trust git.
 
+## Worker lens
+
+While implementing a task, `.claude/skills/worker-guidelines/SKILL.md` is always in force —
+read it before the first edit. Its four habits: read the brief before you write; the
+minimum change that passes the scenario; surgical changes inside the declared files; done
+means verified.
+
 ## Skills & packs
 
 Skills live in `.claude/skills/` (mirrored to `.codex/skills/`); see the table in
