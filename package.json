@@ -6,6 +6,7 @@
   "scripts": {
     "test": "bun test packages libs scripts",
     "check:skills": "bun run scripts/sync-skills.ts --check",
+    "bundle:catalogs": "bun run scripts/bundle-catalogs.ts",
     "lint": "bunx oxlint packages scripts",
     "format": "bunx oxfmt .",
     "release": "bun run scripts/bump-version.ts"

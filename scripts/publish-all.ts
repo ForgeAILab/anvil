@@ -17,9 +17,10 @@
 //   bun run scripts/publish-all.ts          # publishes from current versions
 //   bun run scripts/publish-all.ts --dry    # rewrites + tarballs but doesn't publish
 
-import { readFileSync, writeFileSync, cpSync, rmSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { bundleCatalogs } from './bundle-catalogs.ts';
 
 const DRY = process.argv.includes('--dry');
 
@@ -30,24 +31,9 @@ const PACKAGES = [
   'packages/create-spark',
 ];
 
-// Per-package list of repo paths to copy INTO the package directory before
-// publishing. Each entry is `[srcRelToRoot, dstRelToPackage]`. The publish
-// script restores (deletes) these after the publish completes.
-const CATALOG_BUNDLES: Record<string, Array<readonly [string, string]>> = {
-  'packages/spark': [
-    ['packs', 'packs'],
-    ['presets', 'presets'],
-    ['templates', 'templates'],
-  ],
-  'packages/create-spark': [
-    ['packs', 'packs'],
-    ['presets', 'presets'],
-    ['templates', 'templates'],
-    ['.claude/skills', '.claude/skills'],
-    ['.codex/skills', '.codex/skills'],
-    ['scripts/sync-skills.ts', 'scripts/sync-skills.ts'],
-  ],
-};
+// The catalog bundle table lives in scripts/bundle-catalogs.ts, which the
+// release workflow runs directly; this script applies the same bundling and
+// restores the tree afterwards so local workspaces stay linked.
 
 const root = process.cwd();
 
@@ -95,8 +81,12 @@ function run(cmd: string, args: string[], cwd: string): { code: number; stdout: 
   return { code: result.status ?? 1, stdout: result.stdout ?? '' };
 }
 
-const packageJsonSnapshots = new Map<string, string>();
-const copiedCatalogPaths: string[] = [];
+// Bundle the catalogs first so their `files` additions are part of the
+// snapshot restored on exit, and so the dep rewrite below sees the same
+// package.json the publish will ship.
+const bundled = bundleCatalogs(root);
+const packageJsonSnapshots = new Map<string, string>(bundled.packageJsonSnapshots);
+const copiedCatalogPaths: string[] = [...bundled.createdPaths];
 
 function restoreAll(): void {
   for (const [path, original] of packageJsonSnapshots) {
@@ -117,37 +107,18 @@ process.on('SIGINT', () => {
 
 for (const dir of PACKAGES) {
   const pkgPath = join(root, dir, 'package.json');
-  const original = readFileSync(pkgPath, 'utf8');
-  packageJsonSnapshots.set(pkgPath, original);
+  const current = readFileSync(pkgPath, 'utf8');
+  if (!packageJsonSnapshots.has(pkgPath)) {
+    packageJsonSnapshots.set(pkgPath, current);
+  }
 
-  const pkg = JSON.parse(original) as Pkg;
+  const pkg = JSON.parse(current) as Pkg;
   const touchedDeps =
     rewriteWorkspaceDeps(pkg.dependencies) ||
     rewriteWorkspaceDeps(pkg.devDependencies) ||
     rewriteWorkspaceDeps(pkg.peerDependencies);
 
-  let touchedFiles = false;
-  const bundles = CATALOG_BUNDLES[dir];
-  if (bundles) {
-    // Copy catalog paths into the package + add them to `files`.
-    const addedTopLevel = new Set<string>();
-    for (const [srcRel, dstRel] of bundles) {
-      const src = join(root, srcRel);
-      const dst = join(root, dir, dstRel);
-      if (!existsSync(src)) continue;
-      cpSync(src, dst, { recursive: true, dereference: false });
-      // Track top-level dir under the package so restore cleans the whole
-      // subtree (including parent dirs that didn't exist before).
-      addedTopLevel.add(dstRel.split('/')[0]);
-    }
-    for (const top of addedTopLevel) {
-      copiedCatalogPaths.push(join(root, dir, top));
-    }
-    pkg.files = Array.from(new Set([...(pkg.files ?? []), ...addedTopLevel]));
-    touchedFiles = true;
-  }
-
-  if (touchedDeps || touchedFiles) {
+  if (touchedDeps) {
     writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
   }
 

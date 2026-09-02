@@ -82,7 +82,7 @@ bun run release 0.1.1 --tag       # bumps all 10 package.json files + commits + 
 git push --follow-tags             # CI takes over from here
 ```
 
-The `release` workflow (`.github/workflows/release.yml`) runs on any `v*` tag push: it installs deps, runs `bun test`, asserts every package.json matches the tag, then publishes in topological order (`spark-schema` → `spark` → `create-spark`). Already-published versions are skipped, so re-runs after a partial failure are safe.
+The `release` workflow (`.github/workflows/release.yml`) runs on any `v*` tag push: it installs deps, runs `bun test`, asserts every package.json matches the tag, bundles `templates/`, `packs/`, `presets/`, and the skills into the `spark` and `create-spark` packages (`bun run bundle:catalogs`, so `bunx @forgeailab/create-spark` works without the monorepo), then publishes in topological order (`spark-schema` → `spark` → `create-spark`). Already-published versions are skipped, so re-runs after a partial failure are safe.
 
 To review the bump before tagging:
 

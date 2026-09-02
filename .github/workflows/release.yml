@@ -73,6 +73,14 @@ jobs:
             mv "$tmp" "$pkg/package.json"
           done
 
+      # The CLIs locate templates/, packs/, and the skills inside their own
+      # package when installed from npm. Plain `npm publish` ships only src/,
+      # which is why v0.4.4 could not scaffold outside the monorepo.
+      - name: Bundle catalogs into the publishable packages
+        run: |
+          bun run scripts/bundle-catalogs.ts
+          bun run scripts/bundle-catalogs.ts --check
+
       - name: Publish to npm in topological order (OIDC trusted publishing)
         run: |
           set -e
